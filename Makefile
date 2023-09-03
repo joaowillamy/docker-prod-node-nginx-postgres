@@ -11,6 +11,7 @@ down_prod:
 	docker-compose -f docker-compose.prod.yml down 
 
 clean:
+	# docker stop $(docker ps -a -q)
 	# docker rm $(docker ps -a -q) -f
 	# docker image rm $(docker images -a -q) -f
 	# docker volume rm $(docker volume ls -q) -f
