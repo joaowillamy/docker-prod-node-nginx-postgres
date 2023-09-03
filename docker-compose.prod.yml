@@ -1,0 +1,56 @@
+version: "3.8"
+
+networks:
+  nodenginx:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+services:
+  # Node Server
+  nodeserver:
+    image: nodeserver
+    container_name: nodeserver
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+    ports:
+      - "5000:5000"
+    networks:
+      - nodenginx
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    depends_on:
+      - postgres
+    entrypoint: dockerize -wait tcp://postgres:5432 -timeout 60m && npm run start
+  # Nginx
+  nginx:
+    image: nginx
+    container_name: nginx
+    restart: always
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:80"
+    networks:
+      - nodenginx
+  # Postgres
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - nodenginx
+    tty: true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/

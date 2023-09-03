@@ -1,0 +1,61 @@
+version: "3.8"
+
+networks:
+  nodenginx:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+services:
+  # Node Server
+  nodeserver:
+    image: nodeserver
+    container_name: nodeserver
+    build:
+      context: ./app
+    ports:
+      - "5000:5000"
+    networks:
+      - nodenginx
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    depends_on:
+      - postgres
+  # Nginx
+  nginx:
+    image: nginx
+    container_name: nginx
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - nodenginx
+  # Postgres
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - nodenginx
+    tty: true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  # Adminer
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - nodenginx
